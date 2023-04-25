@@ -1,6 +1,7 @@
 import coxeter
 import data.int.basic
 import group_theory.specific_groups.dihedral
+import group_theory.specific_groups.cyclic
 
 noncomputable theory
 open_locale classical
@@ -78,12 +79,14 @@ begin
 end
 
 -- The length of a group element with respect to a generating set `S`.
+-- Bourbaki, Definition 4.1.1
 def gen_length [generated_group W S] (w : W) := nat.find (len_exists S w) 
 #check gen_length
 
 variables [generated_group W S]
 
 -- A list of elements is reduced it has minimal length amongs all lists with the same product.
+-- Bourbaki, Definition 4.1.1
 def is_reduced (S : set W) (w : W) [generated_group W S] (l : list S) :=
 (l : list W).prod = w ∧ l.length = gen_length S w
 
@@ -91,10 +94,15 @@ def is_reduced (S : set W) (w : W) [generated_group W S] (l : list S) :=
 lemma reduced_exists (w : W) : ∃ l : list S, is_reduced S w l :=
 nat.find_spec (len_exists S w)
 
--- Bourbaki 4.1.1 
+lemma generates_of_generated_group [generated_group W S] : subgroup.closure S = ⊤ :=
+begin
+  apply le_antisymm le_top,
+  intros w _,
+  sorry,
+end
 
--- Proposition 1 
-
+-- Bourbaki 4.1.1
+-- Proposition 1
 -- (1)
 lemma len_mul_le (w w' : W) : gen_length S (w * w') ≤ gen_length S w + gen_length S w' :=
 begin
@@ -147,12 +155,38 @@ begin
     rw ←int.coe_nat_add,
     rw int.coe_nat_le_coe_nat_iff, exact hint,
 end
--- Corollary 4.1.1
-lemma prod_reduced (l l' : list S) (w w' : W) ( hgenw : (l : list W).prod = w ) ( hgenw : (l' : list W).prod = w' ) (h_red : is_reduced S (w*w') (l ++ l') ) : is_reduced S w l ∧ is_reduced S w' l':=
+
+-- Bourbaki, Corollary to Proposition 4.1.1
+lemma prod_reduced {l1 l2 : list S} {w1 w2 : W}
+(hl1 : (l1 : list W).prod = w1) (hl2 : (l2 : list W).prod = w2)
+(hll' : is_reduced S (w1 * w2) (l1 ++ l2)) : 
+  is_reduced S w1 l1 ∧ is_reduced S w2 l2 :=
 begin
-sorry
+  use [hl1],
+  { apply le_antisymm,
+    { by_contra',
+      rcases reduced_exists S w1 with ⟨l1', hl1', hl1''⟩,
+      have h1 : (coe (l1' ++ l2) : list W).prod = w1 * w2 := by simp [coe_append, hl1', hl2],
+      have h2 := calc (l1' ++ l2).length < (l1 ++ l2).length      : by simp [hl1'', this]
+                                     ... = gen_length S (w1 * w2) : hll'.right,
+      apply nat.find_min (len_exists S (w1 * w2)) h2,
+      use [l1' ++ l2, h1], },
+    apply nat.find_min',
+    use [l1, hl1], },
+  use [hl2],
+  { apply le_antisymm,
+    { by_contra',
+      rcases reduced_exists S w2 with ⟨l2', hl2', hl2''⟩,
+      have h1 : (coe (l1 ++ l2') : list W).prod = w1 * w2 := by simp [coe_append, hl2', hl1],
+      have h2 := calc (l1 ++ l2').length < (l1 ++ l2).length      : by simp [hl2'', this]
+                                     ... = gen_length S (w1 * w2) : hll'.right,
+      apply nat.find_min (len_exists S (w1 * w2)) h2,
+      use [l1 ++ l2', h1], },
+    apply nat.find_min',
+    use [l2, hl2], },
 end
 
+section dihedral
 -- Bourbaki 4.1.2
 variables {n : ℕ} 
 def S_D := ({dihedral_group.sr 1, dihedral_group.sr 2} : set (dihedral_group n)) 
@@ -192,8 +226,22 @@ instance : generated_group (dihedral_group n) S_D :=
        sorry
 --       rw zmod.nat_cast_zmod_val w at hinds,
    end,
-   
 }
+
+#check @subgroup.closure_induction
+
+-- Bourbaki, Proposition 4.2.1 (i)
+lemma closure_S_normal {s s' : W} [generated_group W {s,s'}]
+(hneq : s ≠ s') (hs : order_of s = 2) (hs' : order_of s' = 2) : 
+  (subgroup.zpowers (s * s')).normal :=
+begin
+  rw subgroup.zpowers_eq_closure,
+  constructor,
+  sorry,
+end
+
+
+end dihedral
 
 end generated_group
 
