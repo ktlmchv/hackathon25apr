@@ -116,9 +116,33 @@ begin
 sorry
 end
 
-lemma prod_reduced (l l' : list S) (w w' : W) ( hgenw : (l : list W).prod = w ) ( hgenw : (l' : list W).prod = w' ) (h_red : is_reduced S (w*w') (l ++ l') ) : is_reduced S w l ∧ is_reduced S w' l':=
+lemma prod_reduced {l1 l2 : list S} {w1 w2 : W}
+(hl1 : (l1 : list W).prod = w1) (hl2 : (l2 : list W).prod = w2)
+(hll' : is_reduced S (w1 * w2) (l1 ++ l2)) : 
+  is_reduced S w1 l1 ∧ is_reduced S w2 l2 :=
 begin
-sorry
+  use [hl1],
+  { apply le_antisymm,
+    { by_contra',
+      rcases reduced_exists S w1 with ⟨l1', hl1', hl1''⟩,
+      have h1 : (coe (l1' ++ l2) : list W).prod = w1 * w2 := by simp [coe_append, hl1', hl2],
+      have h2 := calc (l1' ++ l2).length < (l1 ++ l2).length      : by simp [hl1'', this]
+                                     ... = gen_length S (w1 * w2) : hll'.right,
+      apply nat.find_min (len_exists S (w1 * w2)) h2,
+      use [l1' ++ l2, h1], },
+    apply nat.find_min',
+    use [l1, hl1], },
+  use [hl2],
+  { apply le_antisymm,
+    { by_contra',
+      rcases reduced_exists S w2 with ⟨l2', hl2', hl2''⟩,
+      have h1 : (coe (l1 ++ l2') : list W).prod = w1 * w2 := by simp [coe_append, hl2', hl1],
+      have h2 := calc (l1 ++ l2').length < (l1 ++ l2).length      : by simp [hl2'', this]
+                                     ... = gen_length S (w1 * w2) : hll'.right,
+      apply nat.find_min (len_exists S (w1 * w2)) h2,
+      use [l1 ++ l2', h1], },
+    apply nat.find_min',
+    use [l2, hl2], }
 end
 
 
