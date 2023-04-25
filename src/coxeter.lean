@@ -2,11 +2,8 @@ import group_theory.free_group
 import data.matrix.basic
 import group_theory.perm.sign
 import group_theory.quotient_group
-import group_theory.group_action
 import group_theory.perm.basic
 import group_theory.presented_group
-import data.set
-import algebra.group
 
 universe u
 noncomputable theory
