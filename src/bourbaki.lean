@@ -18,9 +18,7 @@ rfl
 
 lemma coe_append (l m : list T) : (coe (l ++ m) : list S) = l ++ m :=
 begin
-   induction l with hd tl ih,
-   { refl },
-   rw [list.cons_append, coe_cons, ih, coe_cons, list.cons_append],
+   rw coe, rw list_subtype_to_list, apply list.map_append,
 end
 
 lemma coe_reverse (l : list T) : (l.reverse : list S) = (l : list S).reverse :=
@@ -87,11 +85,6 @@ def is_reduced (S : set W) (w : W) [generated_group W S] (l : list S) :=
 lemma reduced_exists (w : W) : ∃ l : list S, is_reduced S w l :=
 nat.find_spec (len_exists S w)
 
-lemma coe_commutes_with_append (l1 l2 : list S) : (coe (l1 ++ l2) : list W) = (coe l1 : list W) ++ (coe l2 : list W) :=
-begin
-   rw coe, rw list_subtype_to_list, apply list.map_append,
-end
-
 lemma len_mul_le (w w' : W) : gen_length S (w * w') ≤ gen_length S w + gen_length S w' :=
 begin
     have h1 := nat.find_spec (len_exists S w),
@@ -102,7 +95,7 @@ begin
     rw [←hl1.2, ←hl2.2],
     have hgp : gen_by_n S (w*w') (l1.length + l2.length),
          unfold gen_by_n, use l1++l2, split,
-         rw [← hl1.1, ← hl2.1], rw coe_commutes_with_append, rw list.prod_append,
+         rw [← hl1.1, ← hl2.1], rw coe_append, rw list.prod_append,
          rw list.length_append,
     exact nat.find_le hgp
 end
