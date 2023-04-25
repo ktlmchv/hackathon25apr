@@ -4,25 +4,33 @@ import data.int.basic
 noncomputable theory
 open_locale classical
 
-class generated_group (W : Type*) [group W] (S : set W) :=
-(inv : S = S⁻¹) 
-(neut : (1 : W) ∉ S)
-(gen : ∀ w : W, ∃ l : list W, (∀ s ∈ l, s ∈ S) ∧ l.prod = w)
-
-namespace generated_group
-
-variables {W : Type*} (S : set W) [group W] [generated_group W S]  
+variables {W : Type*} (S : set W) [group W]
 
 -- Coercion from `list S` to `list W`
 instance list_subtype_to_list : has_coe (list S) (list W) :=
 ⟨λ l, list.map subtype.val l⟩
+
+class generated_group (W : Type*) [group W] (S : set W) :=
+(inv : S = S⁻¹) 
+(neut : (1 : W) ∉ S)
+(gen : ∀ w : W, ∃ l : list S, (l : list W).prod = w)
+
+namespace generated_group
+
+variables [generated_group W S]  
+
 
 def gen_by_n (w : W) (n : ℕ) := ∃ l : list S, (l : list W).prod = w ∧ l.length = n
 #check gen_by_n
 
 lemma len_exists (w : W) : ∃ n, gen_by_n S w n :=
 begin
-sorry
+   have h := _inst_2.gen w,
+   induction h,
+   use h_w.length,
+   unfold gen_by_n,
+   use h_w, 
+   split, exact h_h, refl, 
 end
 
 def gen_length (w : W) := nat.find (len_exists S w) 
