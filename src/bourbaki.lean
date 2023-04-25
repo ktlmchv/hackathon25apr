@@ -1,5 +1,6 @@
 import coxeter
 import data.int.basic
+import group_theory.specific_groups.cyclic
 
 noncomputable theory
 open_locale classical
@@ -73,18 +74,28 @@ begin
 end
 
 -- The length of a group element with respect to a generating set `S`.
+-- Bourbaki, Definition 4.1.1
 def gen_length [generated_group W S] (w : W) := nat.find (len_exists S w) 
 #check gen_length
 
 variables [generated_group W S]
 
 -- A list of elements is reduced it has minimal length amongs all lists with the same product.
+-- Bourbaki, Definition 4.1.1
 def is_reduced (S : set W) (w : W) [generated_group W S] (l : list S) :=
 (l : list W).prod = w ∧ l.length = gen_length S w
 
 lemma reduced_exists (w : W) : ∃ l : list S, is_reduced S w l :=
 nat.find_spec (len_exists S w)
 
+lemma generates_of_generated_group [generated_group W S] : subgroup.closure S = ⊤ :=
+begin
+  apply le_antisymm le_top,
+  intros w _,
+  sorry,
+end
+
+-- Bourbaki, Proposition 4.1.1 (1)
 lemma len_mul_le (w w' : W) : gen_length S (w * w') ≤ gen_length S w + gen_length S w' :=
 begin
     have h1 := nat.find_spec (len_exists S w),
@@ -100,6 +111,7 @@ begin
     exact nat.find_le hgp
 end
 
+-- Bourbaki, Proposition 4.1.1 (2)
 lemma len_inv (w : W) : gen_length S w⁻¹ = gen_length S w :=
 begin
    have h : ∀ w, gen_length S w⁻¹ ≤ gen_length S w,
@@ -119,6 +131,7 @@ begin
    exact le_antisymm (h w) this,
 end
 
+-- Bourbaki, Proposition 4.1.1 (3)
 lemma le_len_rat (w w' : W) : |(gen_length S w : ℤ) - gen_length S w'| ≤ gen_length S (w * w'⁻¹) :=
 begin
     rw abs_le, split,
@@ -137,6 +150,7 @@ begin
     rw int.coe_nat_le_coe_nat_iff, exact hint,
 end
 
+-- Bourbaki, Corollary to Proposition 4.1.1
 lemma prod_reduced {l1 l2 : list S} {w1 w2 : W}
 (hl1 : (l1 : list W).prod = w1) (hl2 : (l2 : list W).prod = w2)
 (hll' : is_reduced S (w1 * w2) (l1 ++ l2)) : 
@@ -163,9 +177,25 @@ begin
       apply nat.find_min (len_exists S (w1 * w2)) h2,
       use [l1 ++ l2', h1], },
     apply nat.find_min',
-    use [l2, hl2], }
+    use [l2, hl2], },
 end
 
+section dihedral
+
+#check @subgroup.closure_induction
+
+-- Bourbaki, Proposition 4.2.1 (i)
+lemma closure_S_normal {s s' : W} [generated_group W {s,s'}]
+(hneq : s ≠ s') (hs : order_of s = 2) (hs' : order_of s' = 2) : 
+  (subgroup.zpowers (s * s')).normal :=
+begin
+  rw subgroup.zpowers_eq_closure,
+  constructor,
+  sorry,
+end
+
+
+end dihedral
 
 end generated_group
 
