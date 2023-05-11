@@ -1,5 +1,6 @@
 import coxeter
 import data.int.basic
+import group_theory.specific_groups.dihedral
 import group_theory.specific_groups.cyclic
 import algebra.group_power.lemmas
 
@@ -68,8 +69,12 @@ begin
    refl,
 end
 
+-- predicate saying that element w can be prsented as a product of n generators
+
 def gen_by_n (w : W) (n : ℕ) := ∃ l : list S, (l: list W).prod = w ∧ l.length = n
 #check gen_by_n
+
+-- proof that any element can be presented as a product of some amount of generators (needed for nat.find)
 
 lemma len_exists [h : generated_group W S] (w : W) : ∃ n, gen_by_n S w n :=
 begin
@@ -92,6 +97,7 @@ variables [generated_group W S]
 def is_reduced (S : set W) (w : W) [generated_group W S] (l : list S) :=
 (l : list W).prod = w ∧ l.length = gen_length S w
 
+-- alias for find_spec
 lemma reduced_exists (w : W) : ∃ l : list S, is_reduced S w l :=
 nat.find_spec (len_exists S w)
 
@@ -106,7 +112,9 @@ begin
   exact subgroup.subset_closure (list.mem_coe hx),
 end
 
--- Bourbaki, Proposition 4.1.1 (1)
+-- Bourbaki 4.1.1
+-- Proposition 1
+-- (1)
 lemma len_mul_le (w w' : W) : gen_length S (w * w') ≤ gen_length S w + gen_length S w' :=
 begin
     have h1 := nat.find_spec (len_exists S w),
@@ -121,8 +129,7 @@ begin
          rw list.length_append,
     exact nat.find_le hgp
 end
-
--- Bourbaki, Proposition 4.1.1 (2)
+-- (2)
 lemma len_inv (w : W) : gen_length S w⁻¹ = gen_length S w :=
 begin
    have h : ∀ w, gen_length S w⁻¹ ≤ gen_length S w,
@@ -141,8 +148,7 @@ begin
    simp at this,
    exact le_antisymm (h w) this,
 end
-
--- Bourbaki, Proposition 4.1.1 (3)
+-- (3)
 lemma le_len_rat (w w' : W) : |(gen_length S w : ℤ) - gen_length S w'| ≤ gen_length S (w * w'⁻¹) :=
 begin
     rw abs_le, split,
@@ -192,6 +198,46 @@ begin
 end
 
 section dihedral
+-- Bourbaki 4.1.2
+variables {n : ℕ} 
+def S_D := ({dihedral_group.sr 1, dihedral_group.sr 2} : set (dihedral_group n)) 
+#check (list.repeat [1,2] 3).join
+instance : generated_group (dihedral_group n) S_D :=
+{
+   inv := 
+   begin
+       unfold S_D, simp only [set.inv_insert, set.inv_singleton],
+       have h1 : (dihedral_group.sr 1)⁻¹ = dihedral_group.sr 1, 
+       rw inv_eq_iff_mul_eq_one, rw dihedral_group.sr_mul_sr 1 1, rw sub_self, symmetry, have hone := dihedral_group.one_def, exact hone,
+       have h2 : (dihedral_group.sr 2)⁻¹ = dihedral_group.sr 2,
+       rw inv_eq_iff_mul_eq_one, rw dihedral_group.sr_mul_sr 2 2, rw sub_self, symmetry, have hone := dihedral_group.one_def, exact hone,
+       apply set.ext,
+       intro x,
+       simp only [set.mem_insert_iff, set.mem_singleton_iff],
+       split, tauto, tauto, tauto, apply_instance, apply_instance, tauto, apply_instance
+   end,
+   neut :=
+   begin
+       intro h, unfold S_D at h, rw set.mem_insert_iff at h, cases h,
+       rw dihedral_group.one_def at h, injection h,
+       rw set.mem_singleton_iff at h, injection h,
+   end,
+   gen :=
+   begin
+       intro w,
+       cases w,
+       have m1 : dihedral_group.sr 1 ∈ S_D, simp [S_D, set.mem_insert_iff],
+       have m2 : dihedral_group.sr 2 ∈ S_D, unfold S_D, rw set.mem_insert_iff,  right, exact set.mem_singleton _, tauto,
+       use (list.repeat ([⟨dihedral_group.sr 1, m1⟩, ⟨dihedral_group.sr 2, m2⟩] : list S_D) (w.val)).join,
+       have hind : ∀ k : ℕ, ((list.repeat ([dihedral_group.sr 1, dihedral_group.sr 2] : list (dihedral_group n)) k).join).prod = dihedral_group.r (k : zmod n),
+       intro k, induction k with k hk, 
+       simp, exact dihedral_group.one_def,
+       simp[hk], ring, 
+       have hinds := hind w.val,
+       sorry
+--       rw zmod.nat_cast_zmod_val w at hinds,
+   end,
+}
 
 #check @subgroup.closure_induction
 
@@ -240,6 +286,8 @@ end
 end dihedral
 
 end generated_group
+
+--- scratch
 
 #check generated_group.gen_length
 
